@@ -10,28 +10,25 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib import font_manager
 
-# --- 日本語フォント対応 ---
-def set_japanese_font():
-    # 1. まず japanize_matplotlib を試す（入っていれば一番確実）
-    try:
-        import japanize_matplotlib
-        japanize_matplotlib.japanize()  # ← ここで明示的にフォント設定を適用
-        return
-    except ImportError:
-        pass
-    
-    # 2. 入っていない場合はOSに入っている標準的な日本語フォントを探す
+# --- 最強の日本語フォント設定 ---
+try:
+    import japanize_matplotlib
+    # japanize_matplotlibが内蔵している確実なフォント名
+    jp_font = 'IPAexGothic'
+except ImportError:
+    # クラウドでインストールし忘れた場合やローカル環境の保険
+    jp_font = 'sans-serif'
     candidates = ['IPAexGothic', 'IPAPGothic', 'Noto Sans CJK JP',
                   'Hiragino Sans', 'Hiragino Maru Gothic Pro', 'MS Gothic', 
                   'Yu Gothic', 'Meiryo']
     available = {f.name for f in font_manager.fontManager.ttflist}
     for font in candidates:
         if font in available:
-            plt.rcParams['font.family'] = font
-            return
+            jp_font = font
+            break
 
-# 起動時に一度フォントを設定
-set_japanese_font()
+# グラフのデフォルトフォントを設定
+plt.rcParams['font.family'] = jp_font
 
 # ==========================================
 # ページ設定とタイトル
@@ -224,10 +221,11 @@ with tab3:
                 else:
                     st.header("📈 解析結果報告書")
                     
-                    # ======= 【重要】豆腐対策 =======
-                    sns.set_theme(style="whitegrid")
-                    set_japanese_font()  # sns.set_theme でリセットされた直後に再適用する
-                    # ==================================
+                    # ======= 【重要】豆腐対策の最終形態 =======
+                    # font引数で明示的に先ほど取得した日本語フォントをねじ込む
+                    sns.set_theme(style="whitegrid", font=jp_font)
+                    plt.rcParams['font.family'] = jp_font
+                    # ==========================================
 
                     data_list = [df_clean[df_clean[factor_x] == g][target_col].values for g in groups]
 
