@@ -3,29 +3,36 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 import plotly.express as px
-import plotly.graph_objects as go
 import matplotlib
+# Streamlit環境でのMatplotlibの警告・エラー防止
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib import font_manager
 
-# --- 日本語フォント対応 ---
-def set_japanese_font():
+# --- 日本語フォント名を取得する関数 ---
+def get_japanese_font_name():
+    # 1. japanize_matplotlib がインストールされている場合
     try:
         import japanize_matplotlib
-        return
+        return 'IPAexGothic' # japanize_matplotlibが内蔵しているフォント名
     except ImportError:
         pass
+    
+    # 2. OSに入っている標準的な日本語フォントを探す
     candidates = ['IPAexGothic', 'IPAPGothic', 'Noto Sans CJK JP',
                   'Hiragino Sans', 'Hiragino Maru Gothic Pro', 'MS Gothic', 
                   'Yu Gothic', 'Meiryo']
     available = {f.name for f in font_manager.fontManager.ttflist}
     for font in candidates:
         if font in available:
-            plt.rcParams['font.family'] = font
-            return
-set_japanese_font()
+            return font
+            
+    return 'sans-serif' # 見つからない場合のデフォルト
+
+# アプリ起動時に使用するフォント名を取得・設定
+jp_font = get_japanese_font_name()
+plt.rcParams['font.family'] = jp_font
 
 # ==========================================
 # ページ設定とタイトル
@@ -218,8 +225,11 @@ with tab3:
                 else:
                     st.header("📈 解析結果報告書")
                     
-                    sns.set_theme(style="whitegrid")
-                    set_japanese_font()
+                    # ======= 【重要】豆腐対策 =======
+                    # font引数で明示的に日本語フォントを指定してリセットを防ぐ
+                    sns.set_theme(style="whitegrid", font=jp_font)
+                    plt.rcParams['font.family'] = jp_font
+                    # ==================================
 
                     data_list = [df_clean[df_clean[factor_x] == g][target_col].values for g in groups]
 
